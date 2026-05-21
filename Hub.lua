@@ -178,99 +178,43 @@ UIList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     Scroll.CanvasSize = UDim2.new(0,0,0,UIList.AbsoluteContentSize.Y + 10)
 end)
 
---// BUTTON FUNCTION
-local function CreateButton(Name, Callback)
+--// TOGGLE BUTTON FUNCTION
+--// Replace your old CreateButton function with THIS
+
+local function CreateToggle(Name, Default, Callback)
+
+    local Enabled = Default
+
     local Button = Instance.new("TextButton")
     Button.Size = UDim2.new(1,-10,0,40)
     Button.BackgroundColor3 = Color3.fromRGB(35,35,35)
     Button.TextColor3 = Color3.new(1,1,1)
     Button.TextScaled = true
     Button.Font = Enum.Font.GothamBold
-    Button.Text = Name
     Button.Parent = Scroll
 
     Instance.new("UICorner", Button).CornerRadius = UDim.new(0,8)
 
-    Button.MouseButton1Click:Connect(Callback)
+    local function Update()
+        if Enabled then
+            Button.Text = "✅ "..Name
+            Button.BackgroundColor3 = Color3.fromRGB(40,120,40)
+        else
+            Button.Text = "❌ "..Name
+            Button.BackgroundColor3 = Color3.fromRGB(35,35,35)
+        end
+    end
+
+    Update()
+
+    Button.MouseButton1Click:Connect(function()
+        Enabled = not Enabled
+        Update()
+        Callback(Enabled)
+    end)
 
     return Button
 end
-
---// NOCLIP
-local NoclipConnection
-
-CreateButton("🚫 Noclip", function()
-    Settings.Noclip = not Settings.Noclip
-
-    if Settings.Noclip then
-        NoclipConnection = RS.Stepped:Connect(function()
-            for _,v in pairs(Character:GetDescendants()) do
-                if v:IsA("BasePart") then
-                    v.CanCollide = false
-                end
-            end
-        end)
-    else
-        if NoclipConnection then
-            NoclipConnection:Disconnect()
-        end
-    end
-end)
-
---// FLY
-local FlyConnection
-
-CreateButton("🕊 Fly", function()
-    Settings.Fly = not Settings.Fly
-
-    if Settings.Fly then
-        local BV = Instance.new("BodyVelocity")
-        BV.MaxForce = Vector3.new(math.huge,math.huge,math.huge)
-        BV.Parent = RootPart
-
-        local BG = Instance.new("BodyGyro")
-        BG.MaxTorque = Vector3.new(math.huge,math.huge,math.huge)
-        BG.Parent = RootPart
-
-        FlyConnection = RS.RenderStepped:Connect(function()
-            BG.CFrame = workspace.CurrentCamera.CFrame
-
-            local Direction = Vector3.zero
-
-            if UIS:IsKeyDown(Enum.KeyCode.W) then
-                Direction += workspace.CurrentCamera.CFrame.LookVector
-            end
-
-            if UIS:IsKeyDown(Enum.KeyCode.S) then
-                Direction -= workspace.CurrentCamera.CFrame.LookVector
-            end
-
-            if UIS:IsKeyDown(Enum.KeyCode.A) then
-                Direction -= workspace.CurrentCamera.CFrame.RightVector
-            end
-
-            if UIS:IsKeyDown(Enum.KeyCode.D) then
-                Direction += workspace.CurrentCamera.CFrame.RightVector
-            end
-
-            if Direction.Magnitude > 0 then
-                BV.Velocity = Direction.Unit * Settings.FlySpeed
-            else
-                BV.Velocity = Vector3.zero
-            end
-        end)
-    else
-        if FlyConnection then
-            FlyConnection:Disconnect()
-        end
-
-        for _,v in pairs(RootPart:GetChildren()) do
-            if v:IsA("BodyVelocity") or v:IsA("BodyGyro") then
-                v:Destroy()
-            end
-        end
-    end
-end)
 
 --// SPEED
 CreateButton("⚡ Speed +", function()
